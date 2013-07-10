@@ -1,0 +1,27 @@
+buildscript {
+	repositories {
+		mavenLocal()
+	}
+	
+    dependencies {
+        classpath group: 'org.github.teamq.gradle', name: 'gwt-plugin', version: '0.0.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'gwt'
+apply plugin: 'war'
+
+group = 'org.github.teamq.gradle'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+gwt {
+	version = '2.4.0'
+	modules = ['org.github.teamq.gradle.gwt.demo.Demo']
+}

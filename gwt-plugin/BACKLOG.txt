@@ -1,0 +1,6 @@
+project.gwt.version
+project.configurations.gwt extends compile
+
+compileGWT when war plugin is applied
+
+separation production/dev modules or set module directly in compile task
