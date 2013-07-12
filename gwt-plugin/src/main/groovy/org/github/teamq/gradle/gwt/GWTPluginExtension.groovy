@@ -19,6 +19,7 @@ package org.github.teamq.gradle.gwt
 import java.util.List;
 
 import org.gradle.api.Project
+import org.gradle.api.plugins.WarPlugin;
 
 /**
  * @author senk.christian@googlemail.com
@@ -53,12 +54,27 @@ class GWTPluginExtension {
 	 * @param version the version to set.
 	 */
 	void setVersion(String version) {
-		removeAndAddDependency('compile', 'com.google.gwt', 'gwt-user', version);
-		removeAndAddDependency('gwt', 'com.google.gwt', 'gwt-dev', version);
+		updateDependencies(this.version, version)
 		
 		this.version = version;
 	}
 
+	/**
+	 * @param oldVersion
+	 * @param newVersion
+	 * @return
+	 */
+	protected updateDependencies(final String oldVersion, final String newVersion) {
+		removeAndAddDependency('compile', 'com.google.gwt', 'gwt-user', oldVersion, newVersion);
+		removeAndAddDependency('gwt', 'com.google.gwt', 'gwt-dev', oldVersion, newVersion);
+
+		if (project.plugins.findPlugin(WarPlugin.class) != null) {
+			removeAndAddDependency('compile', 'com.google.gwt', 'gwt-servlet', oldVersion, newVersion);
+		}
+	}
+
+	
+	
 	/**
 	 * @return {@link Dependency} notation with the configured {@link #version} to use in {@link DependencyHandler}.
 	 */
@@ -79,20 +95,21 @@ class GWTPluginExtension {
 	 * @param configuration the configuration name.
 	 * @param group the dependency group.
 	 * @param name the dependency name.
-	 * @param version the new dependency version.
+	 * @param oldVersion the old dependency version.
+	 * @param updateVersion the old dependency version.
 	 */
-	private removeAndAddDependency(String configuration, String group, String name, String version) {
+	private removeAndAddDependency(String configuration, String group, String name, final String oldVersion, final String newVersion) {
 		def dependencyIterator = project.configurations[configuration].dependencies.iterator()
 		while (dependencyIterator.hasNext()) {
 			def dependency = dependencyIterator.next();
 
-			if (dependency.group == group && dependency.name == name && dependency.version == this.version) {
+			if (dependency.group == group && dependency.name == name && dependency.version == oldVersion) {
 				dependencyIterator.remove();
 				break;
 			}
 		}
 
-		project.dependencies.add(configuration, "${group}:${name}:${version}")
+		project.dependencies.add(configuration, "${group}:${name}:${newVersion}")
 	}
 	
 }

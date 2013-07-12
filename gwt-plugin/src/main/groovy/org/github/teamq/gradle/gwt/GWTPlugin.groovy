@@ -16,14 +16,11 @@
 
 package org.github.teamq.gradle.gwt
 
-import java.awt.geom.Path2D.Double.CopyIterator;
-
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.WarPlugin
-import org.gradle.api.tasks.Copy;
-import org.gradle.api.tasks.bundling.War;
+import org.gradle.api.tasks.bundling.War
 
 /**
  * @author senk.christian@googlemail.com
@@ -57,7 +54,7 @@ class GWTPlugin implements Plugin<Project> {
 		configureGWTCompile(project, extension)
 		configureStandardGWTCompile(project)
 		
-		configureWarPlugin(project)
+		configureWarPlugin(project, extension)
 	}
 	
 	/**
@@ -81,6 +78,8 @@ class GWTPlugin implements Plugin<Project> {
 	 */
 	private void configureGWTCompile(final Project project, final GWTPluginExtension extension) {
 		project.tasks.withType(GWTCompile.class).whenTaskAdded { task ->
+			task.dependsOn(project.tasks[JavaPlugin.CLASSES_TASK_NAME])
+			
 			task.doFirst {
 				if (task.modules == null || task.modules.isEmpty()) {
 					task.modules = extension.modules
@@ -92,14 +91,14 @@ class GWTPlugin implements Plugin<Project> {
 	/**
 	 * @param project
 	 */
-	private void configureWarPlugin(final Project project) {
+	private void configureWarPlugin(final Project project, final GWTPluginExtension extension) {
 		def warPlugin = project.plugins.withType(WarPlugin.class).find();
 		if (warPlugin != null) {
-			configureWarPlugin(project, warPlugin);
+			configureWarPlugin(project, extension, warPlugin);
 		}
 		
 		project.plugins.withType(WarPlugin.class).whenPluginAdded { plugin ->
-			configureWarPlugin(project, plugin)
+			configureWarPlugin(project, extension, plugin)
 		}
 	}
 	
@@ -107,7 +106,9 @@ class GWTPlugin implements Plugin<Project> {
 	 * @param project
 	 * @param plugin
 	 */
-	private void configureWarPlugin(final Project project, final WarPlugin plugin) {
+	private void configureWarPlugin(final Project project, final GWTPluginExtension extension, final WarPlugin plugin) {
+		extension.updateDependencies(extension.version, extension.version);
+		
 		def compileGWTTask = project.tasks[COMPILE_GWT_TASK_NAME]
 		def warTask = project.tasks[WarPlugin.WAR_TASK_NAME]
 
@@ -118,6 +119,7 @@ class GWTPlugin implements Plugin<Project> {
 		compileDevGWTTask.style = "DETAILED"
 		
 		def devWarTask = project.tasks.add(DEV_WAR_TASK_NAME, War.class)
+		devWarTask.from(compileDevGWTTask.getWarDirectory())
 		devWarTask.dependsOn(compileDevGWTTask)
 		devWarTask.appendix = 'dev'
 		

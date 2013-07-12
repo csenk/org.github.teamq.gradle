@@ -247,8 +247,11 @@ class GWTCompile extends JavaExec {
 	Set<File> getSourcesFiles() {
 		if(sourcesFiles.isEmpty()) {
 			def main = project.sourceSets["main"]
+			
 			sourcesFiles.addAll(main.allSource.srcDirs)
 			sourcesFiles.addAll(main.resources.srcDirs)
+			
+			sourcesFiles.addAll(main.output)
 		}
 		return sourcesFiles;
 	}
