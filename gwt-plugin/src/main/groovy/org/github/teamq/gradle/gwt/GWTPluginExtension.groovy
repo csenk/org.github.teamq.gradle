@@ -16,10 +16,8 @@
 
 package org.github.teamq.gradle.gwt
 
-import java.util.List;
-
 import org.gradle.api.Project
-import org.gradle.api.plugins.WarPlugin;
+import org.gradle.api.plugins.WarPlugin
 
 /**
  * @author senk.christian@googlemail.com
@@ -30,22 +28,6 @@ class GWTPluginExtension {
 	
 	GWTPluginExtension(final Project project) {
 		this.project = project;
-	}
-	
-	List<String> modules
-
-	void setModules(String... modules) {
-		if (modules == null || modules.length == 0) {
-			throw new IllegalArgumentException("Argument 'modules' is null or empty")
-		}
-
-		if (this.modules == null) {
-			this.modules = new ArrayList<String>(modules.length)
-		}
-
-		for (String m : modules) {
-			this.modules.add(m)
-		}
 	}
 	
 	String version
@@ -110,6 +92,112 @@ class GWTPluginExtension {
 		}
 
 		project.dependencies.add(configuration, "${group}:${name}:${newVersion}")
+	}
+	
+	List<String> modules
+
+	List<String> getModules() {
+		if (modules != null && !modules.isEmpty()) {
+			return modules;
+		}
+		
+		def mainSourceSet = project.sourceSets.main
+		return mainSourceSet.java.plus(mainSourceSet.resources)
+			.filter({ it.name.endsWith("gwt.xml") })
+			.collect({
+				def moduleName = it.path
+				mainSourceSet.java.srcDirs.each { moduleName = moduleName.replace(it.path, '') }
+				mainSourceSet.resources.srcDirs.each { moduleName = moduleName.replace(it.path, '') }
+				return moduleName.substring(1).replaceAll('(\\\\|/)', '\\.').replace(".gwt.xml", '')
+			})
+	}
+	
+	void setModules(String... modules) {
+		if (modules == null || modules.length == 0) {
+			throw new IllegalArgumentException("Argument 'modules' is null or empty")
+		}
+
+		this.modules = []
+		this.modules = modules
+	}
+	
+	/**
+	 * The level of logging detail: ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL
+	 */
+	String logLevel = 'INFO'
+	
+	void setLogLevel(String logLevel) {
+		if(logLevel == 'ERROR' || logLevel == 'WARN' || logLevel == 'INFO' || logLevel == 'TRACE' || logLevel == 'DEBUG' || logLevel == 'SPAM' || logLevel == 'ALL') {
+			this.logLevel = logLevel
+		} else {
+			throw new IllegalArgumentException("Argument logLevel='${logLevel}' not allowed, use ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL")
+		}
+	}
+
+	/**
+	 * Script output style: OBF[USCATED], PRETTY, or DETAILED (defaults to OBF)
+	 */
+	String style = 'OBF'
+
+	void setStyle(String style) {
+		if(style == 'OBF' || style == 'PRETTY' || style == 'DETAILED') {
+			this.style = style
+		} else {
+			throw new IllegalArgumentException("Argument style='${style}' not allowed, use OBF[USCATED], PRETTY, or DETAILED")
+		}
+	}
+	
+	/**
+	 *  Debugging: causes the compiled output to check assert statements
+	 */
+	boolean ea = false
+	
+	/**
+	 * EXPERIMENTAL: Disables some java.lang.Class methods (e.g. getName())
+	 */
+	boolean disableClassMetadata = false
+	
+	/**
+	 * EXPERIMENTAL: Disables run-time checking of cast operations
+	 */
+	boolean disableCastChecking = false
+	
+	/**
+	 * Validate all source code, but do not compile
+	 */
+	boolean validateOnly = false
+	
+	/**
+	 * Speeds up compile with 25%
+	 */
+	boolean draftCompile = false
+	
+	/**
+	 * Create a compile report that tells the Story of Your Compile
+	 */
+	boolean compileReport = false
+	
+	/**
+	 * The number of local workers to use when compiling permutations
+	 */
+	int localWorkers = Runtime.getRuntime().availableProcessors();
+	
+	/**
+	 * Only succeed if no input files have errors
+	 */
+	boolean strict = true
+	
+	/**
+	 * Sets the optimization level used by the compiler.  0=none 9=maximum.
+	 */
+	int optimize = 0
+
+	void setOptimize(int optimize) {
+		if(optimize >= 0 && optimize <= 9) {
+			this.optimize = optimize
+		} else {
+			throw new IllegalArgumentException("Argument optimize='${optimize}' is out of range [0,9]")
+		}
 	}
 	
 }

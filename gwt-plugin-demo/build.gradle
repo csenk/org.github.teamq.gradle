@@ -23,5 +23,8 @@ repositories {
 
 gwt {
 	version = '2.4.0'
-	modules = ['org.github.teamq.gradle.gwt.demo.Demo']
+}
+
+dependencies {
+	testCompile group: 'junit', name: 'junit', version: '4.11'
 }

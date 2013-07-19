@@ -1,3 +1,19 @@
+/*
+ * Copyright 2012 Christian Senk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.github.teamq.gradle.gwt
 
 import org.gradle.api.file.FileCollection
@@ -8,10 +24,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
-
 /**
- * TODO open GitHub project and start discussion on gradle.org forum
- * 
  * the definitive gwt gradle plugin
  * 
  * @author dutkowskib
@@ -32,19 +45,23 @@ class GWTCompile extends JavaExec {
 	 * The level of logging detail: ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL
 	 */
 	@Input @Optional
-	String logLevel = 'INFO'
+	String logLevel
 
-	void logLevel(String logLevel) {
-		this.logLevel = logLevel
+	void setLogLevel(String logLevel) {
+		if(logLevel == 'ERROR' || logLevel == 'WARN' || logLevel == 'INFO' || logLevel == 'TRACE' || logLevel == 'DEBUG' || logLevel == 'SPAM' || logLevel == 'ALL') {
+			this.logLevel = logLevel
+		} else {
+			throw new IllegalArgumentException("Argument logLevel='${logLevel}' not allowed, use ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL")
+		}
 	}
-
+	
 	/**
 	 * Script output style: OBF[USCATED], PRETTY, or DETAILED (defaults to OBF)
 	 */
 	@Input @Optional
-	String style = 'OBF'
+	String style
 
-	void style(String style) {
+	void setStyle(String style) {
 		if(style == 'OBF' || style == 'PRETTY' || style == 'DETAILED') {
 			this.style = style
 		} else {
@@ -56,71 +73,43 @@ class GWTCompile extends JavaExec {
 	 *  Debugging: causes the compiled output to check assert statements
 	 */
 	@Input @Optional
-	boolean ea = false
-
-	void ea(boolean ea) {
-		this.ea = ea
-	}
+	Boolean ea
 
 	/**
 	 * EXPERIMENTAL: Disables some java.lang.Class methods (e.g. getName())
 	 */
 	@Input @Optional
-	boolean disableClassMetadata = false
-
-	void disableClassMetadata(boolean disableClassMetadata) {
-		this.disableClassMetadata = disableClassMetadata
-	}
+	Boolean disableClassMetadata
 
 	/**
 	 * EXPERIMENTAL: Disables run-time checking of cast operations
 	 */
 	@Input @Optional
-	boolean disableCastChecking = false
-
-	void disableCastChecking(boolean disableCastChecking) {
-		this.disableCastChecking = disableCastChecking
-	}
+	Boolean disableCastChecking
 
 	/**
 	 * Validate all source code, but do not compile
 	 */
 	@Input @Optional
-	boolean validateOnly = false
-
-	void validateOnly(boolean validateOnly) {
-		this.validateOnly = validateOnly
-	}
+	Boolean validateOnly
 
 	/**
 	 * Speeds up compile with 25%
 	 */
 	@Input @Optional
-	boolean draftCompile = false
-
-	void draftCompile(boolean draftCompile) {
-		this.draftCompile = draftCompile
-	}
+	Boolean draftCompile
 
 	/**
 	 * Create a compile report that tells the Story of Your Compile 
 	 */
 	@Input @Optional
-	boolean compileReport = false
-
-	void compileReport(boolean compileReport) {
-		this.compileReport = compileReport
-	}
+	Boolean compileReport
 
 	/**
 	 * The number of local workers to use when compiling permutations
 	 */
 	@Input @Optional
-	int localWorkers = Runtime.getRuntime().availableProcessors();
-
-	void localWorkers(int localWorkers) {
-		this.localWorkers = localWorkers
-	}
+	Integer localWorkers
 
 	@Input @Optional
 	List<String> modules
@@ -141,19 +130,15 @@ class GWTCompile extends JavaExec {
 	 * Only succeed if no input files have errors
 	 */
 	@Input @Optional
-	boolean strict = true
-
-	void strict(boolean strict) {
-		this.strict = strict
-	}
+	Boolean strict
 
 	/**
 	 * Sets the optimization level used by the compiler.  0=none 9=maximum.
 	 */
 	@Input @Optional
-	int optimize = -1
+	Integer optimize
 
-	void optimize(int optimize) {
+	void setOptimize(int optimize) {
 		if(optimize >= 0 && optimize <= 9) {
 			this.optimize = optimize
 		} else {
@@ -290,28 +275,28 @@ class GWTCompile extends JavaExec {
 		args('-logLevel', logLevel)
 		args('-style', style)
 
-		if(draftCompile) {
+		if(draftCompile != null && draftCompile) {
 			args('-draftCompile')
 		}
-		if(strict) {
+		if(strict != null && strict) {
 			args('-strict')
 		}
-		if(compileReport) {
+		if(compileReport != null && compileReport) {
 			args('-compileReport')
 		}
-		if(ea) {
+		if(ea != null && ea) {
 			args('-ea')
 		}
-		if(disableClassMetadata) {
+		if(disableClassMetadata != null && disableClassMetadata) {
 			args('-XdisableClassMetadata')
 		}
-		if(disableCastChecking) {
+		if(disableCastChecking != null && disableCastChecking) {
 			args('-XdisableCastChecking')
 		}
-		if(validateOnly) {
+		if(validateOnly != null && validateOnly) {
 			args('-validateOnly')
 		}
-		if(optimize >= 0 && optimize <= 9) {
+		if(optimize != null) {
 			args('-optimize', optimize)
 		}
 		if(deployDir != null) {
