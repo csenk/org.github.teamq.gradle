@@ -28,18 +28,16 @@ section of your build script:
 The actual usage is quite simple and like every other gradle plugin.
 
 	apply plugin: 'gwt'
-	
-## Source sets
 
 ## Tasks
 
 The GWT plugin adds a bunch of tasks
 
-| Task name     | Depends on           | Type       | Description                |
-| ------------- | -------------------- | ---------- | -------------------------- |
-| compileGWT    | *classes*            | GWTCompile | Compiles GWT modules       |
+| Task name     | Depends on           | Type       | Description                                               |
+| ------------- | -------------------- | ---------- | --------------------------------------------------------- |
+| compileGWT    | *classes*            | GWTCompile | Compiles GWT modules. Runs with the normal *build* task.  |
 
-If the War plugin is applied as well, some further tasks are added. *compileGWT* and it's output also contributes to the *war* task.
+If the War plugin is applied as well, some further tasks are added. *compileGWT* and it´s output also contributes to the *war* task.
 
 | Task name     | Depends on           | Type       | Description                                               |
 | ------------- | -------------------- | ---------- | --------------------------------------------------------- |
@@ -48,8 +46,53 @@ If the War plugin is applied as well, some further tasks are added. *compileGWT*
 | explodeDevWar | *devWar*             | Task       | Takes the previously assembled war, unzips and deletes it |
 | buildDevWar   | *explodeDevWar*      | Task       | Just a generic task to be more convenient                 |
 
+If the source folder *src/test-gwt* is present, the GWT plugin adds a test task as wells as a source-set
+
+| Task name     | Depends on           | Type       | Description                                               |
+| ------------- | -------------------- | ---------- | --------------------------------------------------------- |
+| testGWT       | *compileGWT*         | Test       | Runs all test cases defined in the source-folder          |
+|               |                      |            | *test-gwt*. The classpath is configured to satisfy the    |
+|               |                      |            | needs of GWT test cases.                                  |
+
 ## Project layout
+
+The GWT plugin expects a new optional source folder *src/test-gwt*. If present the GWT plugin is going to configure a source-set named *test-gwt*
+and a task called *testGWT*.
 
 ## Dependency management
 
-## Extension properties
+Two new dependency configurations are introduced by the GWT plugin as shown below.
+
+| Name          | Extends              | Used by tasks | Meaning                              |
+| ------------- | -------------------- | ------------- | ------------------------------------ |
+| gwt           | compile              | GWTCompile    | Dependencies especially for the GWT  |
+|               |                      |               | compiler. Usually these dependencies |
+|               |                      |               | should not be seen by the normal     |
+|               |                      |               | compileJava.                         |
+|               |                      |               |                                      |
+| testGWT       | gwt                  | testGWT       | Same as *gwt* but only for tests     |
+
+The plugin will take care of the proper dependencies. Even if the war plugin is applied as well, the plugin takes care of
+adding *gwt-servlet* as a dependency. As *gwt-dev* is added to the *gwt* configuration by default it is sometimes
+necessary to add *gwt-dev* to compile as well. This decision should be done careful as *gwt-dev* contains way more
+classes than just GWT related stuff, it sometimes can appear that you are expecting that the classloader loads a classes
+while *gwt-dev* shows up earlier in the classpath carrying an older version of this class. This normally leads to
+NoSuchMethod exceptions or similar.
+
+But anyway, here is how you add *gwt-dev* to compile as well.
+
+	compile gwt.devSDK()
+
+You only have to make sure, that you call this method **after** you set the right GWT version. This is because *devSDK()*
+generates a static dependency notation.
+
+## Configuration
+
+By default the GWT plugin will use version '2.5.1' of GWT as it was the latest version during the development of the plugin.
+But you are free to change this easily:
+
+	gwt.version = '2.4.0'
+
+The GWT plugin adds the chance of configuring some GWT and compile related properties globally for the project.
+Each GWTCompile task you use or define by yourself will initially inherit these properties. But you are everytime
+free to configure each GWTCompile task independently.

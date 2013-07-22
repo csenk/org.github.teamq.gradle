@@ -22,7 +22,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.bundling.War
-import org.gradle.api.tasks.testing.Test;
+import org.gradle.api.tasks.testing.Test
 
 
 /**
@@ -69,7 +69,7 @@ class GWTPlugin implements Plugin<Project> {
 	 * @param project
 	 */
 	private void configureTestGWT(final Project project) {
-		SourceSet sourceSet = configureSourceSet(project, "test-gwt")
+		SourceSet sourceSet = configureTestGWTSourceSet(project)
 		if (sourceSet == null) {
 			return
 		}
@@ -86,7 +86,7 @@ class GWTPlugin implements Plugin<Project> {
 		task.testSrcDirs = sourceSet.java.srcDirs.toList()
 		task.testClassesDir = sourceSet.output.classesDir
 		
-		[sourceSet, project.sourceSets.main].each {
+		project.sourceSets.each {
 			task.classpath += project.files(it.java.srcDirs) + project.files(it.resources.srcDirs) + it.output
 		}
 		task.classpath += sourceSet.runtimeClasspath + sourceSet.compileClasspath
@@ -104,19 +104,18 @@ class GWTPlugin implements Plugin<Project> {
 	
 	/**
 	 * @param project
-	 * @param String
 	 * @return
 	 */
-	private SourceSet configureSourceSet(final Project project, final String ) {
+	private SourceSet configureTestGWTSourceSet(final Project project) {
 		File sourceDirectory = project.file("src${File.separator}test-gwt${File.separator}")
 		if (!sourceDirectory.exists()) {
 			return null;
 		}
 		
 		return project.sourceSets.add(TEST_GWT_SOURCESET_NAME) {
-			compileClasspath += project.configurations.getByName('testCompile')
-			runtimeClasspath += project.configurations.getByName('testRuntime')
-			runtimeClasspath += project.configurations.getByName('testGWT')
+			compileClasspath += project.configurations.getByName(JavaPlugin.TEST_COMPILE_CONFIGURATION_NAME)
+			runtimeClasspath += project.configurations.getByName(JavaPlugin.TEST_RUNTIME_CONFIGURATION_NAME)
+			runtimeClasspath += project.configurations.getByName(TEST_GWT_CONFIGURATION_NAME)
 			
 			SourceSet main = project.sourceSets.main
 			compileClasspath += main.compileClasspath

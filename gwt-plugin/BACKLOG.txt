@@ -1,4 +1,0 @@
-project.gwt.version
-project.configurations.gwt extends compile
-
-compileGWT when war plugin is applied
