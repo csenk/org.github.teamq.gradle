@@ -10,7 +10,8 @@ But as you searched a gwt plugin for gradle i can safely assume that you already
 
 To build this plugin, clone this repository and call:
 
-	gradle :gwt-plugin:install
+	cd gwt-plugin
+	gradle install
 	
 After you installed this plugin into your local maven/gradle caches this way, you are able to reference it right in the top
 section of your build script:
@@ -48,11 +49,9 @@ If the War plugin is applied as well, some further tasks are added. *compileGWT*
 
 If the source folder *src/test-gwt* is present, the GWT plugin adds a test task as wells as a source-set
 
-| Task name     | Depends on           | Type       | Description                                               |
-| ------------- | -------------------- | ---------- | --------------------------------------------------------- |
-| testGWT       | *compileGWT*         | Test       | Runs all test cases defined in the source-folder          |
-|               |                      |            | *test-gwt*. The classpath is configured to satisfy the    |
-|               |                      |            | needs of GWT test cases.                                  |
+| Task name     | Depends on           | Type       | Description                                                  |
+| ------------- | -------------------- | ---------- | ------------------------------------------------------------ |
+| testGWT       | *compileGWT*         | Test       | Runs all test cases defined in the source-folder *test-gwt*. |
 
 ## Project layout
 
@@ -63,14 +62,9 @@ and a task called *testGWT*.
 
 Two new dependency configurations are introduced by the GWT plugin as shown below.
 
-| Name          | Extends              | Used by tasks | Meaning                              |
-| ------------- | -------------------- | ------------- | ------------------------------------ |
-| gwt           | compile              | GWTCompile    | Dependencies especially for the GWT  |
-|               |                      |               | compiler. Usually these dependencies |
-|               |                      |               | should not be seen by the normal     |
-|               |                      |               | compileJava.                         |
-|               |                      |               |                                      |
-| testGWT       | gwt                  | testGWT       | Same as *gwt* but only for tests     |
+| Name          | Extends              | Used by tasks | Meaning                                       |
+| ------------- | -------------------- | ------------- | --------------------------------------------- |
+| gwt           | compile              | GWTCompile    | Dependencies especially for the GWT compiler. |
 
 The plugin will take care of the proper dependencies. Even if the war plugin is applied as well, the plugin takes care of
 adding *gwt-servlet* as a dependency. As *gwt-dev* is added to the *gwt* configuration by default it is sometimes
