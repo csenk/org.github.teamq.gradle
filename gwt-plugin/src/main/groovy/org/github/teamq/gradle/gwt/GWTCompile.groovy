@@ -17,6 +17,7 @@
 package org.github.teamq.gradle.gwt
 
 import org.gradle.api.file.FileCollection
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.JavaExec
@@ -38,270 +39,269 @@ import org.gradle.api.tasks.TaskAction
  */
 class GWTCompile extends JavaExec {
 
-	String group = 'Build'
-	String description = 'GWT'
+    String group = 'Build'
+    String description = 'GWT'
 
-	/**
-	 * The level of logging detail: ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL
-	 */
-	@Input @Optional
-	String logLevel
+    /**
+     * The level of logging detail: ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL
+     */
+    @Input @Optional
+    String logLevel
 
-	void setLogLevel(String logLevel) {
-		if(logLevel == 'ERROR' || logLevel == 'WARN' || logLevel == 'INFO' || logLevel == 'TRACE' || logLevel == 'DEBUG' || logLevel == 'SPAM' || logLevel == 'ALL') {
-			this.logLevel = logLevel
-		} else {
-			throw new IllegalArgumentException("Argument logLevel='${logLevel}' not allowed, use ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL")
-		}
-	}
-	
-	/**
-	 * Script output style: OBF[USCATED], PRETTY, or DETAILED (defaults to OBF)
-	 */
-	@Input @Optional
-	String style
+    void setLogLevel(String logLevel) {
+        if(logLevel == 'ERROR' || logLevel == 'WARN' || logLevel == 'INFO' || logLevel == 'TRACE' || logLevel == 'DEBUG' || logLevel == 'SPAM' || logLevel == 'ALL') {
+            this.logLevel = logLevel
+        } else {
+            throw new IllegalArgumentException("Argument logLevel='${logLevel}' not allowed, use ERROR, WARN, INFO, TRACE, DEBUG, SPAM, or ALL")
+        }
+    }
 
-	void setStyle(String style) {
-		if(style == 'OBF' || style == 'PRETTY' || style == 'DETAILED') {
-			this.style = style
-		} else {
-			throw new IllegalArgumentException("Argument style='${style}' not allowed, use OBF[USCATED], PRETTY, or DETAILED")
-		}
-	}
+    /**
+     * Script output style: OBF[USCATED], PRETTY, or DETAILED (defaults to OBF)
+     */
+    @Input @Optional
+    String style
 
-	/**
-	 *  Debugging: causes the compiled output to check assert statements
-	 */
-	@Input @Optional
-	Boolean ea
+    void setStyle(String style) {
+        if(style == 'OBF' || style == 'PRETTY' || style == 'DETAILED') {
+            this.style = style
+        } else {
+            throw new IllegalArgumentException("Argument style='${style}' not allowed, use OBF[USCATED], PRETTY, or DETAILED")
+        }
+    }
 
-	/**
-	 * EXPERIMENTAL: Disables some java.lang.Class methods (e.g. getName())
-	 */
-	@Input @Optional
-	Boolean disableClassMetadata
+    /**
+     *  Debugging: causes the compiled output to check assert statements
+     */
+    @Input @Optional
+    Boolean ea
 
-	/**
-	 * EXPERIMENTAL: Disables run-time checking of cast operations
-	 */
-	@Input @Optional
-	Boolean disableCastChecking
+    /**
+     * EXPERIMENTAL: Disables some java.lang.Class methods (e.g. getName())
+     */
+    @Input @Optional
+    Boolean disableClassMetadata
 
-	/**
-	 * Validate all source code, but do not compile
-	 */
-	@Input @Optional
-	Boolean validateOnly
+    /**
+     * EXPERIMENTAL: Disables run-time checking of cast operations
+     */
+    @Input @Optional
+    Boolean disableCastChecking
 
-	/**
-	 * Speeds up compile with 25%
-	 */
-	@Input @Optional
-	Boolean draftCompile
+    /**
+     * Validate all source code, but do not compile
+     */
+    @Input @Optional
+    Boolean validateOnly
 
-	/**
-	 * Create a compile report that tells the Story of Your Compile 
-	 */
-	@Input @Optional
-	Boolean compileReport
+    /**
+     * Speeds up compile with 25%
+     */
+    @Input @Optional
+    Boolean draftCompile
 
-	/**
-	 * The number of local workers to use when compiling permutations
-	 */
-	@Input @Optional
-	Integer localWorkers
+    /**
+     * Create a compile report that tells the Story of Your Compile 
+     */
+    @Input @Optional
+    Boolean compileReport
 
-	@Input @Optional
-	List<String> modules
+    /**
+     * The number of local workers to use when compiling permutations
+     */
+    @Input @Optional
+    Integer localWorkers
 
-	void modules(String ... modules) {
-		if(modules == null || modules.length == 0) {
-			throw new IllegalArgumentException("Argument 'modules' is null or empty")
-		}
-		if(this.modules == null) {
-			this.modules = new ArrayList<String>(modules.length)
-		}
-		for(String m:modules) {
-			this.modules.add(m)
-		}
-	}
+    @Input @Optional
+    List<String> modules
 
-	/**
-	 * Only succeed if no input files have errors
-	 */
-	@Input @Optional
-	Boolean strict
+    void modules(String ... modules) {
+        if(modules == null || modules.length == 0) {
+            throw new IllegalArgumentException("Argument 'modules' is null or empty")
+        }
+        if(this.modules == null) {
+            this.modules = new ArrayList<String>(modules.length)
+        }
+        for(String m:modules) {
+            this.modules.add(m)
+        }
+    }
 
-	/**
-	 * Sets the optimization level used by the compiler.  0=none 9=maximum.
-	 */
-	@Input @Optional
-	Integer optimize
+    /**
+     * Only succeed if no input files have errors
+     */
+    @Input @Optional
+    Boolean strict
 
-	void setOptimize(int optimize) {
-		if(optimize >= 0 && optimize <= 9) {
-			this.optimize = optimize
-		} else {
-			throw new IllegalArgumentException("Argument optimize='${optimize}' is out of range [0,9]")
-		}
-	}
+    /**
+     * Sets the optimization level used by the compiler.  0=none 9=maximum.
+     */
+    @Input @Optional
+    Integer optimize
 
-	File buildDir
-	
-	@Optional
-	File getBuildDir() {
-		if (buildDir != null) {
-			return buildDir;
-		}
-		
-		return project.file("${project.buildDir}/${name}");
-	}
-	
-	/**
-	 * The compiler's working directory for internal use (must be writeable)
-	 */
-	File workDirectory
+    void setOptimize(int optimize) {
+        if(optimize >= 0 && optimize <= 9) {
+            this.optimize = optimize
+        } else {
+            throw new IllegalArgumentException("Argument optimize='${optimize}' is out of range [0,9]")
+        }
+    }
 
-	@OutputDirectory @Optional
-	File getWorkDirectory() {
-		if (workDirectory != null) {
-			return workDirectory;
-		}
-		
-		return project.file("${getBuildDir()}/work")
-	}
-	
-	/**
-	 * The directory into which deployable output files will be written (defaults to 'war')
-	 */
-	File warDirectory
+    File buildDir
 
-	@OutputDirectory @Optional
-	File getWarDirectory() {
-		if (warDirectory != null) {
-			return warDirectory;
-		}
-		
-		return project.file("${getBuildDir()}/war")
-	}
+    @Optional
+    File getBuildDir() {
+        if (buildDir != null) {
+            return buildDir;
+        }
 
-	/**
-	 *  The directory into which extra files, not intended for deployment, will be written
-	 */
-	File extraDir
+        return project.file("${project.buildDir}/${name}");
+    }
 
-	@OutputDirectory @Optional
-	File getExtraDir() {
-		if (extraDir != null) {
-			return extraDir;
-		}
-		
-		return project.file("${getBuildDir()}/extra")
-	}
+    /**
+     * The compiler's working directory for internal use (must be writeable)
+     */
+    File workDirectory
 
-	/**
-	 * Debugging: causes normally-transient generated types to be saved in the specified directory
-	 */
-	File generatedDir
+    @OutputDirectory @Optional
+    File getWorkDirectory() {
+        if (workDirectory != null) {
+            return workDirectory;
+        }
 
-	@OutputDirectory @Optional
-	File getGeneratedDir() {
-		if (generatedDir != null) {
-			return generatedDir;
-		}
-		
-		return project.file("${getBuildDir()}/generated")
-	}
+        return project.file("${getBuildDir()}/work")
+    }
 
-	/**
-	 * The directory into which deployable but not servable output files will be written (defaults to 'WEB-INF/deploy' under the -war directory/jar, and may be the same as the -extra directory/jar)
-	 */
-	@OutputDirectory @Optional
-	File deployDir = null
+    /**
+     * The directory into which deployable output files will be written (defaults to 'war')
+     */
+    File warDirectory
 
-	GWTCompile() {
-		outputs.upToDateSpec = new org.gradle.api.specs.AndSpec() //http://issues.gradle.org/browse/GRADLE-1483
-	}
+    @OutputDirectory @Optional
+    File getWarDirectory() {
+        if (warDirectory != null) {
+            return warDirectory;
+        }
 
-	@InputFiles
-	Set<File> sourcesFiles = new HashSet<File>()
+        return project.file("${getBuildDir()}/war")
+    }
 
-	/**
-	 * @return the sourceFiles but completed with with some standard resources.
-	 */
-	Set<File> getSourcesFiles() {
-		if(sourcesFiles.isEmpty()) {
-			def main = project.sourceSets["main"]
-			
-			sourcesFiles.addAll(main.allSource.srcDirs)
-			sourcesFiles.addAll(main.resources.srcDirs)
-			
-			sourcesFiles.addAll(main.output)
-		}
-		return sourcesFiles;
-	}
+    /**
+     *  The directory into which extra files, not intended for deployment, will be written
+     */
+    File extraDir
 
-	/**
-	 * Compile the project with the GWT compiler. Uses "build/war" as staging directory.
-	 *
-	 * @see http://www.eveoh.nl/en/2012/01/using-google-web-toolkit-with-gradle/
-	 */
-	@TaskAction
-	void exec () {
-		classpath(getSourcesFiles())
-		classpath(project.configurations[GWTPlugin.GWT_EXTENSION_NAME].files)
+    @OutputDirectory @Optional
+    File getExtraDir() {
+        if (extraDir != null) {
+            return extraDir;
+        }
 
-		setMain('com.google.gwt.dev.Compiler')
-		
-		maxHeapSize = '1024M'
-		allJvmArgs.add("-XX:MaxPermSize=512M")
+        return project.file("${getBuildDir()}/extra")
+    }
 
-		buildArgs()
-		
-		super.exec()
-	}
+    /**
+     * Debugging: causes normally-transient generated types to be saved in the specified directory
+     */
+    File generatedDir
 
-	/**
-	 * Builds the arguments.
-	 */
-	private buildArgs() {
-		args(modules)
+    @OutputDirectory @Optional
+    File getGeneratedDir() {
+        if (generatedDir != null) {
+            return generatedDir;
+        }
 
-		args('-war', getWarDirectory())
-		args('-workDir', getWorkDirectory())
-		args('-gen', getGeneratedDir())
-		args('-extra', getExtraDir())
-		
-		args('-logLevel', logLevel)
-		args('-style', style)
+        return project.file("${getBuildDir()}/generated")
+    }
 
-		if(draftCompile != null && draftCompile) {
-			args('-draftCompile')
-		}
-		if(strict != null && strict) {
-			args('-strict')
-		}
-		if(compileReport != null && compileReport) {
-			args('-compileReport')
-		}
-		if(ea != null && ea) {
-			args('-ea')
-		}
-		if(disableClassMetadata != null && disableClassMetadata) {
-			args('-XdisableClassMetadata')
-		}
-		if(disableCastChecking != null && disableCastChecking) {
-			args('-XdisableCastChecking')
-		}
-		if(validateOnly != null && validateOnly) {
-			args('-validateOnly')
-		}
-		if(optimize != null) {
-			args('-optimize', optimize)
-		}
-		if(deployDir != null) {
-			args('-deploy', deployDir)
-		}
-	}
+    /**
+     * The directory into which deployable but not servable output files will be written (defaults to 'WEB-INF/deploy' under the -war directory/jar, and may be the same as the -extra directory/jar)
+     */
+    @OutputDirectory @Optional
+    File deployDir = null
 
+    GWTCompile() {
+        outputs.upToDateSpec = new org.gradle.api.specs.AndSpec() //http://issues.gradle.org/browse/GRADLE-1483
+    }
+
+    @InputFiles
+    Set<File> sourcesFiles = new HashSet<File>()
+
+    /**
+     * @return the sourceFiles but completed with with some standard resources.
+     */
+    Set<File> getSourcesFiles() {
+        if(sourcesFiles.isEmpty()) {
+            def main = project.sourceSets["main"]
+
+            sourcesFiles.addAll(main.allSource.srcDirs)
+            sourcesFiles.addAll(main.resources.srcDirs)
+
+            sourcesFiles.addAll(main.output)
+        }
+        return sourcesFiles;
+    }
+
+    /**
+     * Compile the project with the GWT compiler. Uses "build/war" as staging directory.
+     *
+     * @see http://www.eveoh.nl/en/2012/01/using-google-web-toolkit-with-gradle/
+     */
+    @TaskAction
+    void exec () {
+        classpath(getSourcesFiles())
+        classpath(project.configurations[JavaPlugin.COMPILE_CONFIGURATION_NAME].files)
+
+        setMain('com.google.gwt.dev.Compiler')
+
+        maxHeapSize = '1024M'
+        allJvmArgs.add("-XX:MaxPermSize=512M")
+
+        buildArgs()
+
+        super.exec()
+    }
+
+    /**
+     * Builds the arguments.
+     */
+    private buildArgs() {
+        args(modules)
+
+        args('-war', getWarDirectory())
+        args('-workDir', getWorkDirectory())
+        args('-gen', getGeneratedDir())
+        args('-extra', getExtraDir())
+
+        args('-logLevel', logLevel)
+        args('-style', style)
+
+        if(draftCompile != null && draftCompile) {
+            args('-draftCompile')
+        }
+        if(strict != null && strict) {
+            args('-strict')
+        }
+        if(compileReport != null && compileReport) {
+            args('-compileReport')
+        }
+        if(ea != null && ea) {
+            args('-ea')
+        }
+        if(disableClassMetadata != null && disableClassMetadata) {
+            args('-XdisableClassMetadata')
+        }
+        if(disableCastChecking != null && disableCastChecking) {
+            args('-XdisableCastChecking')
+        }
+        if(validateOnly != null && validateOnly) {
+            args('-validateOnly')
+        }
+        if(optimize != null) {
+            args('-optimize', optimize)
+        }
+        if(deployDir != null) {
+            args('-deploy', deployDir)
+        }
+    }
 }

@@ -62,9 +62,10 @@ and a task called *testGWT*.
 
 Two new dependency configurations are introduced by the GWT plugin as shown below.
 
-| Name          | Extends              | Used by tasks | Meaning                                       |
+| Name          | Contributes to       | Used by tasks | Meaning                                       |
 | ------------- | -------------------- | ------------- | --------------------------------------------- |
-| gwt           | compile              | GWTCompile    | Dependencies especially for the GWT compiler. |
+| gwt           | compile, testGWT     | GWTCompile    | Dependencies especially for the GWT compiler. |
+| testGWT       | testCompile          | testGWT       | Same as *gwt* but only for tests              |
 
 The plugin will take care of the proper dependencies. Even if the war plugin is applied as well, the plugin takes care of
 adding *gwt-servlet* as a dependency. As *gwt-dev* is added to the *gwt* configuration by default it is sometimes
